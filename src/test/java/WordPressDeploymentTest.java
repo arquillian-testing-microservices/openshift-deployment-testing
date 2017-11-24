@@ -1,18 +1,20 @@
 import io.fabric8.kubernetes.api.model.v2_6.Service;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
-import java.io.IOException;
-import java.net.URL;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.arquillian.cube.kubernetes.annotations.Named;
-import org.arquillian.cube.kubernetes.annotations.PortForward;
+import org.arquillian.cube.openshift.impl.enricher.AwaitRoute;
+import org.arquillian.cube.openshift.impl.enricher.RouteURL;
 import org.arquillian.cube.openshift.impl.requirement.RequiresOpenshift;
 import org.arquillian.cube.requirement.ArquillianConditionalRunner;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.io.IOException;
+import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,27 +23,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class WordPressDeploymentTest {
 
     @Named("wordpress-mysql-example")
-    @PortForward
     @ArquillianResource
     Service wordpress;
 
     @Named("wordpress-mysql-example")
-    @PortForward
     @ArquillianResource
     Service mysql;
 
     @Named("wordpress-mysql-example")
-    @PortForward
-    @ArquillianResource
-    URL url;
-
-    @Named("wordpress-mysql-example")
-    @PortForward
     @ArquillianResource
     DeploymentConfig wordpressExample;
 
     @ArquillianResource
     OpenShiftClient client;
+
+    @RouteURL("wordpress-mysql-example")
+    @AwaitRoute
+    URL url;
 
     @Test
     public void verify_openshift_client_should_not_be_null() throws IOException {
@@ -67,13 +65,7 @@ public class WordPressDeploymentTest {
     @Test
     public void verify_wordpress_deployment_config_should_not_be_null() throws IOException {
         assertThat(wordpressExample).isNotNull();
-        assertThat(wordpressExample.getStatus()).hasFieldOrPropertyWithValue("availableReplicas", 1);
-    }
-
-    @Test
-    public void verify_wordpress__should_not_be_null() throws IOException {
-        assertThat(wordpressExample).isNotNull();
-        assertThat(wordpressExample.getStatus()).hasFieldOrPropertyWithValue("availableReplicas", 1);
+        assertThat(wordpressExample.getStatus().getAvailableReplicas()).isEqualTo(1);
     }
 
     @Test
